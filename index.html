@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>R.O.B.E.R.T. — Голосовой помощник</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Exo+2:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cyan: #00d4ff;
+    --green: #00ff88;
+    --dark: #050d1a;
+    --darker: #020b14;
+    --border: #0a2a3a;
+    --text: #c8e8ff;
+    --muted: #1a4a6a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--dark);
+    color: var(--text);
+    font-family: 'Exo 2', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Сетка на фоне */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Свечение сверху */
+  body::after {
+    content: '';
+    position: fixed;
+    top: -200px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 800px;
+    height: 400px;
+    background: radial-gradient(ellipse, rgba(0,212,255,0.08) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 24px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* NAV */
+  nav {
+    padding: 24px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 22px;
+    color: var(--cyan);
+    letter-spacing: 4px;
+  }
+
+  .version {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    color: var(--green);
+    border: 1px solid var(--green);
+    padding: 4px 10px;
+    border-radius: 2px;
+  }
+
+  /* HERO */
+  .hero {
+    text-align: center;
+    padding: 80px 0 60px;
+    animation: fadeUp 0.8s ease both;
+  }
+
+  .hero-tag {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    color: var(--green);
+    letter-spacing: 3px;
+    margin-bottom: 24px;
+    opacity: 0.8;
+  }
+
+  .hero h1 {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: clamp(48px, 10vw, 96px);
+    color: var(--cyan);
+    letter-spacing: 8px;
+    line-height: 1;
+    margin-bottom: 16px;
+    text-shadow: 0 0 60px rgba(0,212,255,0.3);
+  }
+
+  .hero-sub {
+    font-size: 13px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    margin-bottom: 48px;
+    font-family: 'Share Tech Mono', monospace;
+  }
+
+  .hero-desc {
+    font-size: 18px;
+    color: var(--text);
+    font-weight: 300;
+    max-width: 560px;
+    margin: 0 auto 48px;
+    line-height: 1.7;
+    opacity: 0.85;
+  }
+
+  /* КНОПКА */
+  .btn-download {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    background: transparent;
+    border: 1px solid var(--cyan);
+    color: var(--cyan);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 15px;
+    letter-spacing: 2px;
+    padding: 16px 40px;
+    text-decoration: none;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s;
+  }
+
+  .btn-download::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--cyan);
+    transform: translateX(-100%);
+    transition: transform 0.3s;
+    z-index: -1;
+  }
+
+  .btn-download:hover {
+    color: var(--dark);
+    box-shadow: 0 0 30px rgba(0,212,255,0.3);
+  }
+
+  .btn-download:hover::before {
+    transform: translateX(0);
+  }
+
+  .btn-icon { font-size: 18px; }
+
+  .btn-note {
+    display: block;
+    margin-top: 12px;
+    font-size: 12px;
+    color: var(--muted);
+    font-family: 'Share Tech Mono', monospace;
+  }
+
+  /* РАЗДЕЛИТЕЛЬ */
+  .divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border), transparent);
+    margin: 20px 0;
+  }
+
+  /* ФИЧИ */
+  .features {
+    padding: 60px 0;
+    animation: fadeUp 0.8s 0.2s ease both;
+  }
+
+  .section-title {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--green);
+    letter-spacing: 4px;
+    margin-bottom: 32px;
+    text-align: center;
+  }
+
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+  }
+
+  .feature-card {
+    background: var(--darker);
+    border: 1px solid var(--border);
+    padding: 28px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s;
+  }
+
+  .feature-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px; height: 100%;
+    background: var(--cyan);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .feature-card:hover {
+    border-color: rgba(0,212,255,0.3);
+  }
+
+  .feature-card:hover::before {
+    opacity: 1;
+  }
+
+  .feature-icon {
+    font-size: 28px;
+    margin-bottom: 14px;
+    display: block;
+  }
+
+  .feature-title {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 14px;
+    color: var(--cyan);
+    margin-bottom: 8px;
+    letter-spacing: 1px;
+  }
+
+  .feature-desc {
+    font-size: 14px;
+    color: var(--text);
+    opacity: 0.6;
+    line-height: 1.6;
+    font-weight: 300;
+  }
+
+  /* КОМАНДЫ */
+  .commands {
+    padding: 60px 0;
+    animation: fadeUp 0.8s 0.4s ease both;
+  }
+
+  .commands-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+  }
+
+  .cmd-group h3 {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--green);
+    letter-spacing: 3px;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .cmd-group ul {
+    list-style: none;
+  }
+
+  .cmd-group li {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    color: var(--text);
+    opacity: 0.6;
+    padding: 4px 0;
+    padding-left: 12px;
+    position: relative;
+  }
+
+  .cmd-group li::before {
+    content: '›';
+    position: absolute;
+    left: 0;
+    color: var(--cyan);
+    opacity: 0.5;
+  }
+
+  /* УСТАНОВКА */
+  .setup {
+    padding: 60px 0;
+    animation: fadeUp 0.8s 0.5s ease both;
+  }
+
+  .steps {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .step {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    background: var(--darker);
+    border: 1px solid var(--border);
+    padding: 20px 24px;
+  }
+
+  .step-num {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 28px;
+    color: var(--cyan);
+    opacity: 0.3;
+    min-width: 40px;
+    line-height: 1;
+  }
+
+  .step-content h4 {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    color: var(--cyan);
+    margin-bottom: 6px;
+    letter-spacing: 1px;
+  }
+
+  .step-content p {
+    font-size: 14px;
+    color: var(--text);
+    opacity: 0.6;
+    font-weight: 300;
+    line-height: 1.6;
+  }
+
+  .step-content a {
+    color: var(--cyan);
+    text-decoration: none;
+    opacity: 0.8;
+  }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 32px 0;
+    text-align: center;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 2px;
+  }
+
+  /* АНИМАЦИИ */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Мигающий курсор */
+  .cursor {
+    display: inline-block;
+    width: 3px;
+    height: 1em;
+    background: var(--cyan);
+    margin-left: 4px;
+    vertical-align: middle;
+    animation: blink 1s step-end infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
+  @media (max-width: 600px) {
+    .hero h1 { font-size: 48px; letter-spacing: 4px; }
+    .features-grid { grid-template-columns: 1fr; }
+    .commands-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <nav>
+    <div class="logo">R.O.B.E.R.T.</div>
+    <div class="version">v1.0</div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-tag">// ГОЛОСОВОЙ ПОМОЩНИК ДЛЯ WINDOWS</div>
+    <h1>ROBERT<span class="cursor"></span></h1>
+    <div class="hero-sub">Really Outstanding Bot for Everyday Responses &amp; Tasks</div>
+    <p class="hero-desc">
+      Умный голосовой помощник для управления компьютером.<br>
+      Говори — Роберт выполнит.
+    </p>
+    <a href="https://github.com/NoneCipe/robert-app/releases/download/v1.0/ROBERT.exe" class="btn-download">
+      <span class="btn-icon">⬇</span> СКАЧАТЬ ROBERT.EXE
+    </a>
+    <span class="btn-note">Windows 10/11 · Бесплатно · v1.0</span>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ФИЧИ -->
+  <section class="features">
+    <div class="section-title">// ВОЗМОЖНОСТИ</div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <span class="feature-icon">🎙</span>
+        <div class="feature-title">Голосовое управление</div>
+        <div class="feature-desc">Говорите на русском — Роберт понимает и выполняет команды мгновенно</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">🧠</span>
+        <div class="feature-title">Умный ИИ-диалог</div>
+        <div class="feature-desc">Задавайте любые вопросы — ответы от мощной языковой модели Groq</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">💻</span>
+        <div class="feature-title">Управление ПК</div>
+        <div class="feature-desc">Открывает программы, делает скриншоты, управляет звуком и окнами</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">🔒</span>
+        <div class="feature-title">Ваш ключ — ваши данные</div>
+        <div class="feature-desc">API ключ хранится только на вашем компьютере, нигде не передаётся</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- КОМАНДЫ -->
+  <section class="commands">
+    <div class="section-title">// КОМАНДЫ</div>
+    <div class="commands-grid">
+      <div class="cmd-group">
+        <h3>ПРОГРАММЫ</h3>
+        <ul>
+          <li>открой браузер</li>
+          <li>открой проводник</li>
+          <li>открой блокнот</li>
+          <li>открой калькулятор</li>
+          <li>диспетчер задач</li>
+        </ul>
+      </div>
+      <div class="cmd-group">
+        <h3>ЗВУК</h3>
+        <ul>
+          <li>громче / тише</li>
+          <li>выключи звук</li>
+          <li>следующий трек</li>
+          <li>предыдущий трек</li>
+          <li>пауза</li>
+        </ul>
+      </div>
+      <div class="cmd-group">
+        <h3>СИСТЕМА</h3>
+        <ul>
+          <li>скриншот</li>
+          <li>сверни всё</li>
+          <li>заблокируй пк</li>
+        </ul>
+      </div>
+      <div class="cmd-group">
+        <h3>ВРЕМЯ</h3>
+        <ul>
+          <li>который час</li>
+          <li>какое число</li>
+          <li>день недели</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- УСТАНОВКА -->
+  <section class="setup">
+    <div class="section-title">// КАК НАЧАТЬ</div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">01</div>
+        <div class="step-content">
+          <h4>СКАЧАЙТЕ ПРИЛОЖЕНИЕ</h4>
+          <p>Нажмите кнопку выше и скачайте ROBERT.exe. Установка не требуется — просто запустите файл.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <div class="step-content">
+          <h4>ПОЛУЧИТЕ БЕСПЛАТНЫЙ API КЛЮЧ</h4>
+          <p>Зарегистрируйтесь на <a href="https://console.groq.com" target="_blank">console.groq.com</a> → API Keys → Create API Key. Это бесплатно и бессрочно.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <div class="step-content">
+          <h4>ВВЕДИТЕ КЛЮЧ В НАСТРОЙКАХ</h4>
+          <p>Запустите ROBERT.exe → нажмите ⚙ → вставьте ключ → сохраните. Готово!</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    R.O.B.E.R.T. © 2025 · Really Outstanding Bot for Everyday Responses &amp; Tasks
+  </footer>
+</div>
+
+</body>
+</html>
