@@ -1,1126 +1,133 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>R.O.B.E.R.T. — Голосовой помощник</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>R.O.B.E.R.T. — голосовой помощник</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Manrope:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
-    :root {
-      --bg: #050815;
-      --bg-soft: #0b1023;
-      --panel: rgba(13, 18, 39, 0.62);
-      --panel-strong: rgba(13, 18, 39, 0.86);
-      --line: rgba(255, 255, 255, 0.1);
-      --text: #f3f6ff;
-      --muted: #99a4cf;
-      --cyan: #89e7ff;
-      --blue: #5c84ff;
-      --pink: #d66bff;
-      --green: #7dffbe;
-      --shadow: 0 32px 80px rgba(0, 0, 0, 0.45);
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    html {
-      scroll-behavior: smooth;
-    }
-
-    body {
-      min-height: 100vh;
-      font-family: "Manrope", sans-serif;
-      color: var(--text);
-      overflow-x: hidden;
-      background:
-        radial-gradient(circle at 18% 18%, rgba(92, 132, 255, 0.18), transparent 28%),
-        radial-gradient(circle at 82% 16%, rgba(214, 107, 255, 0.14), transparent 26%),
-        radial-gradient(circle at 50% 85%, rgba(137, 231, 255, 0.12), transparent 30%),
-        linear-gradient(180deg, #070a15 0%, #05060e 44%, #090d1d 100%);
-    }
-
-    body::before {
-      content: "";
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      opacity: 0.35;
-      background-image:
-        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-      background-size: 84px 84px;
-      mask-image: radial-gradient(circle at center, black 46%, transparent 82%);
-    }
-
-    .noise {
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      opacity: 0.08;
-      background-image: radial-gradient(#ffffff 0.7px, transparent 0.7px);
-      background-size: 18px 18px;
-      mix-blend-mode: screen;
-      animation: noise-drift 20s linear infinite;
-    }
-
-    .orb {
-      position: fixed;
-      width: 34rem;
-      height: 34rem;
-      border-radius: 50%;
-      filter: blur(56px);
-      opacity: 0.22;
-      pointer-events: none;
-    }
-
-    .orb.one {
-      top: -10rem;
-      left: -10rem;
-      background: radial-gradient(circle, rgba(92, 132, 255, 0.95), transparent 64%);
-      animation: float-a 14s ease-in-out infinite;
-    }
-
-    .orb.two {
-      top: 10rem;
-      right: -11rem;
-      background: radial-gradient(circle, rgba(214, 107, 255, 0.75), transparent 63%);
-      animation: float-b 16s ease-in-out infinite;
-    }
-
-    .orb.three {
-      bottom: -14rem;
-      left: 28%;
-      background: radial-gradient(circle, rgba(137, 231, 255, 0.6), transparent 64%);
-      animation: float-a 18s ease-in-out infinite reverse;
-    }
-
-    .shell {
-      width: min(1200px, calc(100% - 32px));
-      margin: 0 auto;
-      position: relative;
-      z-index: 1;
-      padding-bottom: 72px;
-    }
-
-    .topbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 20px;
-      margin-top: 18px;
-      padding: 18px 22px;
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      background: rgba(8, 11, 24, 0.6);
-      backdrop-filter: blur(18px);
-      box-shadow: var(--shadow);
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      font-family: "Orbitron", sans-serif;
-      font-size: 0.92rem;
-      letter-spacing: 0.24em;
-      text-transform: uppercase;
-    }
-
-    .brand-mark {
-      width: 42px;
-      height: 42px;
-      border-radius: 14px;
-      position: relative;
-      border: 1px solid rgba(255, 255, 255, 0.14);
-      background: linear-gradient(145deg, rgba(137, 231, 255, 0.22), rgba(214, 107, 255, 0.18));
-      overflow: hidden;
-    }
-
-    .brand-mark::before,
-    .brand-mark::after {
-      content: "";
-      position: absolute;
-      border-radius: 50%;
-    }
-
-    .brand-mark::before {
-      inset: 8px;
-      border: 1px solid rgba(255, 255, 255, 0.16);
-    }
-
-    .brand-mark::after {
-      inset: 14px;
-      background: radial-gradient(circle, rgba(255, 255, 255, 0.95), rgba(137, 231, 255, 0.85) 42%, transparent 72%);
-      box-shadow: 0 0 18px rgba(137, 231, 255, 0.65);
-    }
-
-    .nav {
-      display: flex;
-      gap: 22px;
-      align-items: center;
-      color: var(--muted);
-      font-size: 0.95rem;
-    }
-
-    .nav a {
-      color: inherit;
-      text-decoration: none;
-    }
-
-    .nav a:hover {
-      color: var(--text);
-    }
-
-    .version-pill {
-      padding: 10px 16px;
-      border-radius: 999px;
-      border: 1px solid rgba(125, 255, 190, 0.28);
-      color: var(--green);
-      background: linear-gradient(180deg, rgba(125, 255, 190, 0.1), rgba(125, 255, 190, 0.04));
-      font-family: "Orbitron", sans-serif;
-      font-size: 0.76rem;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-    }
-
-    .hero {
-      display: grid;
-      grid-template-columns: minmax(0, 1.04fr) minmax(380px, 0.96fr);
-      gap: 42px;
-      align-items: center;
-      min-height: calc(100vh - 118px);
-      padding: 42px 0 20px;
-    }
-
-    .eyebrow {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 16px;
-      border-radius: 999px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      background: rgba(255, 255, 255, 0.04);
-      color: var(--muted);
-      font-family: "Orbitron", sans-serif;
-      font-size: 0.7rem;
-      letter-spacing: 0.22em;
-      text-transform: uppercase;
-    }
-
-    .eyebrow::before {
-      content: "";
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--green);
-      box-shadow: 0 0 14px var(--green);
-    }
-
-    h1 {
-      margin: 22px 0 18px;
-      font-family: "Orbitron", sans-serif;
-      font-size: clamp(3.4rem, 8vw, 7.4rem);
-      line-height: 0.9;
-      letter-spacing: -0.04em;
-      text-transform: uppercase;
-    }
-
-    h1 .stroke {
-      color: transparent;
-      -webkit-text-stroke: 1px rgba(255, 255, 255, 0.9);
-      text-shadow: 0 0 32px rgba(255, 255, 255, 0.07);
-    }
-
-    .hero-sub {
-      margin-bottom: 16px;
-      color: var(--green);
-      font-family: "Orbitron", sans-serif;
-      font-size: 0.8rem;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      opacity: 0.92;
-    }
-
-    .lead {
-      max-width: 40rem;
-      margin-bottom: 30px;
-      color: var(--muted);
-      font-size: 1.08rem;
-      line-height: 1.85;
-    }
-
-    .hero-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 14px;
-      margin-bottom: 28px;
-    }
-
-    .button {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 196px;
-      padding: 16px 24px;
-      border-radius: 999px;
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      background: rgba(255, 255, 255, 0.04);
-      color: var(--text);
-      text-decoration: none;
-      transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
-    }
-
-    .button:hover {
-      transform: translateY(-2px);
-      border-color: rgba(255, 255, 255, 0.24);
-    }
-
-    .button.primary {
-      background: linear-gradient(135deg, rgba(137, 231, 255, 0.34), rgba(92, 132, 255, 0.22) 50%, rgba(214, 107, 255, 0.22));
-      border-color: rgba(137, 231, 255, 0.34);
-      box-shadow: 0 20px 42px rgba(38, 90, 211, 0.28);
-    }
-
-    .button-note {
-      display: block;
-      color: var(--muted);
-      font-size: 0.92rem;
-    }
-
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 16px;
-    }
-
-    .stat {
-      padding: 18px 18px 20px;
-      border-radius: 24px;
-      border: 1px solid rgba(255, 255, 255, 0.09);
-      background: rgba(255, 255, 255, 0.035);
-      backdrop-filter: blur(16px);
-    }
-
-    .stat strong {
-      display: block;
-      margin-bottom: 8px;
-      font-size: 1.7rem;
-      font-family: "Orbitron", sans-serif;
-    }
-
-    .stat span {
-      color: var(--muted);
-      line-height: 1.55;
-      font-size: 0.92rem;
-    }
-
-    .scene {
-      position: relative;
-      min-height: 600px;
-      aspect-ratio: 0.95;
-      overflow: hidden;
-      border-radius: 38px;
-      border: 1px solid rgba(255, 255, 255, 0.09);
-      background: linear-gradient(180deg, rgba(9, 13, 29, 0.96), rgba(7, 10, 23, 0.9));
-      box-shadow: var(--shadow);
-      isolation: isolate;
-    }
-
-    .scene::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background:
-        radial-gradient(circle at 50% 34%, rgba(137, 231, 255, 0.14), transparent 26%),
-        radial-gradient(circle at 50% 58%, rgba(214, 107, 255, 0.1), transparent 34%);
-      z-index: 0;
-    }
-
-    #particles {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 1;
-    }
-
-    .hero-ring {
-      position: absolute;
-      left: 50%;
-      top: 48%;
-      width: 28rem;
-      height: 28rem;
-      transform: translate(-50%, -50%);
-      border-radius: 50%;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      box-shadow: 0 0 120px rgba(109, 158, 255, 0.14);
-      animation: spin 16s linear infinite;
-      z-index: 2;
-    }
-
-    .hero-ring::before,
-    .hero-ring::after {
-      content: "";
-      position: absolute;
-      border-radius: 50%;
-    }
-
-    .hero-ring::before {
-      inset: 18px;
-      border-top: 2px solid rgba(137, 231, 255, 0.94);
-      border-bottom: 2px solid rgba(214, 107, 255, 0.24);
-      border-left: 2px solid transparent;
-      border-right: 2px solid transparent;
-      filter: drop-shadow(0 0 18px rgba(137, 231, 255, 0.55));
-    }
-
-    .hero-ring::after {
-      inset: 60px;
-      border-top: 2px solid rgba(255, 255, 255, 0.86);
-      border-bottom: 2px solid rgba(92, 132, 255, 0.26);
-      border-left: 2px solid transparent;
-      border-right: 2px solid transparent;
-      animation: spin-reverse 10s linear infinite;
-    }
-
-    .core {
-      position: absolute;
-      left: 50%;
-      top: 47%;
-      width: 176px;
-      height: 246px;
-      transform: translate(-50%, -50%);
-      border-radius: 92px 92px 42px 42px;
-      border: 1px solid rgba(255, 255, 255, 0.18);
-      background: linear-gradient(180deg, rgba(17, 23, 49, 0.94), rgba(9, 13, 28, 0.72));
-      box-shadow: inset 0 0 50px rgba(137, 169, 255, 0.12), 0 0 55px rgba(87, 137, 255, 0.18);
-      z-index: 3;
-    }
-
-    .core::before {
-      content: "";
-      position: absolute;
-      left: 50%;
-      top: 34px;
-      width: 96px;
-      height: 96px;
-      transform: translateX(-50%);
-      border-radius: 50%;
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      box-shadow: inset 0 0 28px rgba(137, 231, 255, 0.16);
-      background: radial-gradient(circle at 45% 36%, rgba(255, 255, 255, 0.34), rgba(137, 231, 255, 0.12) 42%, transparent 66%);
-    }
-
-    .core::after {
-      content: "";
-      position: absolute;
-      left: 50%;
-      bottom: -40px;
-      width: 2px;
-      height: 78px;
-      transform: translateX(-50%);
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(137, 231, 255, 0));
-      box-shadow: 0 0 18px rgba(137, 231, 255, 0.72);
-    }
-
-    .core-eye {
-      position: absolute;
-      left: 50%;
-      top: 80px;
-      width: 30px;
-      height: 30px;
-      transform: translateX(-50%);
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(255, 255, 255, 0.98), rgba(137, 231, 255, 0.9) 34%, rgba(92, 132, 255, 0.16) 76%, transparent 77%);
-      box-shadow: 0 0 22px rgba(137, 231, 255, 0.9);
-      animation: pulse 2.4s ease-in-out infinite;
-    }
-
-    .glass-card {
-      position: absolute;
-      border-radius: 24px;
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      background: linear-gradient(180deg, rgba(23, 30, 61, 0.72), rgba(12, 16, 34, 0.58));
-      backdrop-filter: blur(16px);
-      box-shadow: 0 24px 50px rgba(3, 6, 17, 0.45);
-      z-index: 4;
-    }
-
-    .card-left {
-      left: 22px;
-      bottom: 28px;
-      width: 260px;
-      padding: 20px;
-      transform: rotate(-6deg);
-    }
-
-    .card-right {
-      right: 16px;
-      bottom: 62px;
-      width: 204px;
-      padding: 18px;
-      transform: rotate(9deg);
-    }
-
-    .card-tag {
-      display: inline-flex;
-      margin-bottom: 12px;
-      padding: 7px 12px;
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.05);
-      color: var(--muted);
-      font-family: "Orbitron", sans-serif;
-      font-size: 0.66rem;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-    }
-
-    .card-title {
-      margin-bottom: 10px;
-      font-family: "Orbitron", sans-serif;
-      font-size: 2rem;
-      letter-spacing: 0.28em;
-    }
-
-    .card-copy {
-      color: var(--muted);
-      line-height: 1.6;
-      font-size: 0.9rem;
-    }
-
-    .spectrum {
-      position: relative;
-      margin-top: 18px;
-      height: 110px;
-      border-radius: 20px;
-      overflow: hidden;
-      background:
-        radial-gradient(circle at 30% 30%, rgba(137, 231, 255, 0.6), transparent 28%),
-        radial-gradient(circle at 68% 60%, rgba(214, 107, 255, 0.5), transparent 28%),
-        linear-gradient(135deg, rgba(18, 29, 67, 0.95), rgba(17, 16, 45, 0.88));
-    }
-
-    .spectrum::after {
-      content: "";
-      position: absolute;
-      inset: auto -30px -20px auto;
-      width: 120px;
-      height: 120px;
-      border-radius: 24px;
-      transform: rotate(22deg);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.04));
-    }
-
-    .bars {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      gap: 7px;
-      align-items: end;
-      height: 128px;
-      margin-top: 18px;
-    }
-
-    .bars span {
-      display: block;
-      border-radius: 999px;
-      background: linear-gradient(180deg, rgba(137, 231, 255, 0.96), rgba(214, 107, 255, 0.38));
-      box-shadow: 0 0 18px rgba(137, 231, 255, 0.28);
-      transform-origin: bottom;
-      animation: bars 1.8s ease-in-out infinite;
-    }
-
-    .bars span:nth-child(2) { animation-delay: 0.15s; }
-    .bars span:nth-child(3) { animation-delay: 0.3s; }
-    .bars span:nth-child(4) { animation-delay: 0.45s; }
-    .bars span:nth-child(5) { animation-delay: 0.2s; }
-    .bars span:nth-child(6) { animation-delay: 0.35s; }
-    .bars span:nth-child(7) { animation-delay: 0.5s; }
-
-    .section {
-      margin-top: 54px;
-      padding: 26px;
-      border-radius: 34px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      background: rgba(9, 12, 26, 0.54);
-      backdrop-filter: blur(16px);
-      box-shadow: var(--shadow);
-    }
-
-    .section-head {
-      display: flex;
-      align-items: end;
-      justify-content: space-between;
-      gap: 20px;
-      margin-bottom: 26px;
-    }
-
-    .section-head h2 {
-      font-family: "Orbitron", sans-serif;
-      font-size: clamp(2rem, 4vw, 3.5rem);
-      line-height: 0.94;
-      text-transform: uppercase;
-    }
-
-    .section-head p {
-      max-width: 30rem;
-      color: var(--muted);
-      line-height: 1.75;
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 18px;
-    }
-
-    .feature {
-      position: relative;
-      min-height: 238px;
-      padding: 24px;
-      overflow: hidden;
-      border-radius: 26px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      background: linear-gradient(180deg, rgba(17, 23, 47, 0.8), rgba(9, 13, 28, 0.66));
-    }
-
-    .feature::before {
-      content: "";
-      position: absolute;
-      inset: auto -25% -35% auto;
-      width: 180px;
-      height: 180px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(137, 231, 255, 0.22), transparent 65%);
-    }
-
-    .feature small {
-      display: block;
-      margin-bottom: 18px;
-      color: var(--green);
-      font-family: "Orbitron", sans-serif;
-      font-size: 0.72rem;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-    }
-
-    .feature h3 {
-      margin-bottom: 12px;
-      font-size: 1.28rem;
-    }
-
-    .feature p {
-      color: var(--muted);
-      line-height: 1.72;
-      font-size: 0.96rem;
-    }
-
-    .commands-grid {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 16px;
-    }
-
-    .command-card {
-      padding: 22px;
-      border-radius: 24px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      background: linear-gradient(180deg, rgba(17, 23, 47, 0.78), rgba(8, 11, 24, 0.65));
-    }
-
-    .command-card h3 {
-      margin-bottom: 14px;
-      color: var(--green);
-      font-family: "Orbitron", sans-serif;
-      font-size: 0.82rem;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-    }
-
-    .command-card ul {
-      list-style: none;
-      display: grid;
-      gap: 10px;
-    }
-
-    .command-card li {
-      padding-left: 14px;
-      color: var(--muted);
-      position: relative;
-      line-height: 1.5;
-    }
-
-    .command-card li::before {
-      content: "";
-      position: absolute;
-      left: 0;
-      top: 0.58em;
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: var(--cyan);
-      box-shadow: 0 0 12px rgba(137, 231, 255, 0.8);
-    }
-
-    .steps {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 18px;
-    }
-
-    .step {
-      padding: 24px;
-      border-radius: 28px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      background: linear-gradient(180deg, rgba(18, 24, 49, 0.82), rgba(9, 13, 28, 0.65));
-    }
-
-    .step-num {
-      margin-bottom: 14px;
-      color: rgba(137, 231, 255, 0.92);
-      font-family: "Orbitron", sans-serif;
-      font-size: 2rem;
-    }
-
-    .step h4 {
-      margin-bottom: 8px;
-      font-size: 1rem;
-      font-family: "Orbitron", sans-serif;
-      letter-spacing: 0.08em;
-    }
-
-    .step p,
-    .step a {
-      color: var(--muted);
-      line-height: 1.7;
-    }
-
-    .step a {
-      color: var(--cyan);
-      text-decoration: none;
-    }
-
-    .footer {
-      display: flex;
-      justify-content: space-between;
-      gap: 18px;
-      align-items: center;
-      padding: 34px 4px 10px;
-      color: var(--muted);
-      font-size: 0.92rem;
-    }
-
-    [data-reveal] {
-      opacity: 0;
-      transform: translateY(26px);
-      transition: opacity 700ms ease, transform 700ms ease;
-    }
-
-    [data-reveal].visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    @keyframes noise-drift {
-      from { transform: translate3d(0, 0, 0); }
-      to { transform: translate3d(-18px, 24px, 0); }
-    }
-
-    @keyframes spin {
-      from { transform: translate(-50%, -50%) rotate(0deg); }
-      to { transform: translate(-50%, -50%) rotate(360deg); }
-    }
-
-    @keyframes spin-reverse {
-      from { transform: rotate(360deg); }
-      to { transform: rotate(0deg); }
-    }
-
-    @keyframes pulse {
-      0%, 100% { transform: translateX(-50%) scale(0.92); opacity: 0.88; }
-      50% { transform: translateX(-50%) scale(1.08); opacity: 1; }
-    }
-
-    @keyframes bars {
-      0%, 100% { transform: scaleY(0.4); opacity: 0.72; }
-      50% { transform: scaleY(1); opacity: 1; }
-    }
-
-    @keyframes float-a {
-      0%, 100% { transform: translate3d(0, 0, 0); }
-      50% { transform: translate3d(28px, 22px, 0); }
-    }
-
-    @keyframes float-b {
-      0%, 100% { transform: translate3d(0, 0, 0); }
-      50% { transform: translate3d(-24px, 18px, 0); }
-    }
-
-    @media (max-width: 1080px) {
-      .hero,
-      .grid,
-      .commands-grid,
-      .steps {
-        grid-template-columns: 1fr 1fr;
-      }
-
-      .hero {
-        align-items: start;
-      }
-    }
-
-    @media (max-width: 980px) {
-      .topbar {
-        border-radius: 28px;
-        padding: 16px 18px;
-      }
-
-      .nav {
-        display: none;
-      }
-
-      .hero {
-        grid-template-columns: 1fr;
-        min-height: auto;
-        padding-top: 28px;
-      }
-
-      .scene {
-        min-height: 520px;
-      }
-
-      .section-head,
-      .footer {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      .grid,
-      .commands-grid,
-      .steps {
-        grid-template-columns: 1fr 1fr;
-      }
-    }
-
-    @media (max-width: 640px) {
-      .shell {
-        width: min(100% - 20px, 1200px);
-      }
-
-      h1 {
-        font-size: clamp(2.8rem, 15vw, 4.5rem);
-      }
-
-      .lead {
-        font-size: 1rem;
-      }
-
-      .stats,
-      .grid,
-      .commands-grid,
-      .steps {
-        grid-template-columns: 1fr;
-      }
-
-      .scene {
-        min-height: 450px;
-      }
-
-      .hero-ring {
-        width: 21rem;
-        height: 21rem;
-      }
-
-      .core {
-        width: 140px;
-        height: 214px;
-      }
-
-      .card-left,
-      .card-right {
-        width: calc(100% - 34px);
-        left: 17px;
-        right: 17px;
-        transform: none;
-      }
-
-      .card-left {
-        bottom: 18px;
-      }
-
-      .card-right {
-        display: none;
-      }
-
-      .section {
-        padding: 20px;
-        border-radius: 28px;
-      }
-    }
+    :root{--bg:#060915;--panel:rgba(13,18,38,.72);--line:rgba(255,255,255,.1);--text:#f5f7ff;--muted:#95a3ce;--cyan:#8ce8ff;--blue:#6286ff;--pink:#d76bff;--green:#90ffb6;--gold:#ffd28f;--shadow:0 32px 80px rgba(0,0,0,.45)}
+    *{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}body{min-height:100vh;overflow-x:hidden;font-family:"Manrope",sans-serif;color:var(--text);background:radial-gradient(circle at 18% 18%,rgba(98,134,255,.17),transparent 28%),radial-gradient(circle at 82% 16%,rgba(215,107,255,.15),transparent 24%),radial-gradient(circle at 50% 86%,rgba(140,232,255,.1),transparent 30%),linear-gradient(180deg,#070a16 0,#04050c 45%,#090d1c 100%)}
+    body:before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.34;background-image:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);background-size:84px 84px;mask-image:radial-gradient(circle at center,black 44%,transparent 84%)}
+    .noise,.orb{pointer-events:none;position:fixed}.noise{inset:0;opacity:.08;background-image:radial-gradient(#fff .7px,transparent .7px);background-size:18px 18px;mix-blend-mode:screen;animation:drift 20s linear infinite}.orb{width:34rem;height:34rem;border-radius:50%;filter:blur(56px);opacity:.22}.o1{top:-10rem;left:-10rem;background:radial-gradient(circle,rgba(98,134,255,.95),transparent 64%);animation:floatA 14s ease-in-out infinite}.o2{top:10rem;right:-11rem;background:radial-gradient(circle,rgba(215,107,255,.76),transparent 63%);animation:floatB 16s ease-in-out infinite}.o3{bottom:-14rem;left:28%;background:radial-gradient(circle,rgba(140,232,255,.6),transparent 64%);animation:floatA 18s ease-in-out infinite reverse}
+    .shell{width:min(1220px,calc(100% - 32px));margin:0 auto;position:relative;z-index:1;padding-bottom:72px}
+    .topbar,.section,.scene,.stat,.feature,.command,.step,.card{backdrop-filter:blur(16px)}
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-top:18px;padding:18px 22px;border:1px solid var(--line);border-radius:999px;background:rgba(8,11,24,.62);box-shadow:var(--shadow)}
+    .brand{display:flex;align-items:center;gap:14px;font:700 .92rem/1 "Orbitron",sans-serif;letter-spacing:.24em;text-transform:uppercase}.mark{width:42px;height:42px;border-radius:14px;position:relative;border:1px solid rgba(255,255,255,.14);background:linear-gradient(145deg,rgba(140,232,255,.22),rgba(215,107,255,.18))}.mark:before,.mark:after{content:"";position:absolute;border-radius:50%}.mark:before{inset:8px;border:1px solid rgba(255,255,255,.16)}.mark:after{inset:14px;background:radial-gradient(circle,#fff,rgba(140,232,255,.84) 42%,transparent 72%);box-shadow:0 0 18px rgba(140,232,255,.64)}
+    .nav{display:flex;gap:22px;color:var(--muted);font-size:.95rem}.nav a{color:inherit;text-decoration:none}.pill{padding:10px 16px;border-radius:999px;border:1px solid rgba(144,255,182,.28);color:var(--green);background:linear-gradient(180deg,rgba(144,255,182,.1),rgba(144,255,182,.04));font:500 .76rem/1 "Orbitron",sans-serif;letter-spacing:.16em;text-transform:uppercase}
+    .hero{display:grid;grid-template-columns:minmax(0,.92fr) minmax(430px,1.08fr);gap:34px;align-items:center;min-height:calc(100vh - 118px);padding:42px 0 20px}
+    .eyebrow{display:inline-flex;align-items:center;gap:10px;padding:10px 16px;border-radius:999px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:var(--muted);font:500 .7rem/1 "Orbitron",sans-serif;letter-spacing:.22em;text-transform:uppercase}.eyebrow:before{content:"";width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 14px var(--green)}
+    h1{margin:22px 0 18px;font:800 clamp(3.2rem,7.3vw,6.8rem)/.9 "Orbitron",sans-serif;letter-spacing:-.04em;text-transform:uppercase}.stroke{color:transparent;-webkit-text-stroke:1px rgba(255,255,255,.9);text-shadow:0 0 32px rgba(255,255,255,.07)}.hero-sub{margin-bottom:16px;color:var(--green);font:500 .8rem/1 "Orbitron",sans-serif;letter-spacing:.18em;text-transform:uppercase}.lead{max-width:37rem;margin-bottom:28px;color:var(--muted);font-size:1.06rem;line-height:1.82}
+    .actions{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:20px}.btn{display:inline-flex;align-items:center;justify-content:center;min-width:196px;padding:16px 24px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);color:var(--text);text-decoration:none;transition:.18s}.btn:hover{transform:translateY(-2px);border-color:rgba(255,255,255,.24)}.btn.primary{background:linear-gradient(135deg,rgba(140,232,255,.34),rgba(98,134,255,.22) 50%,rgba(215,107,255,.22));border-color:rgba(140,232,255,.34);box-shadow:0 20px 42px rgba(38,90,211,.28)}
+    .note{display:block;color:var(--muted);font-size:.92rem;margin-bottom:26px}.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.stat{padding:18px;border-radius:24px;border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.035)}.stat strong{display:block;margin-bottom:8px;font:700 1.7rem/1 "Orbitron",sans-serif}.stat span{color:var(--muted);line-height:1.55;font-size:.92rem}
+    .scene{position:relative;min-height:720px;overflow:hidden;border-radius:40px;border:1px solid rgba(255,255,255,.09);background:linear-gradient(180deg,rgba(9,13,29,.97),rgba(7,10,23,.92));box-shadow:var(--shadow);isolation:isolate}.scene:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 32%,rgba(140,232,255,.12),transparent 24%),radial-gradient(circle at 50% 56%,rgba(215,107,255,.1),transparent 30%);z-index:0}
+    #particles,.gridfx{position:absolute;inset:0}.gridfx{background-image:linear-gradient(rgba(255,255,255,.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.02) 1px,transparent 1px);background-size:48px 48px;mask-image:radial-gradient(circle at center,black 46%,transparent 82%);z-index:1}
+    .ring{position:absolute;left:50%;top:44%;width:31rem;height:31rem;transform:translate(-50%,-50%);border-radius:50%;border:1px solid rgba(255,255,255,.08);box-shadow:0 0 126px rgba(109,158,255,.13);animation:spin 17s linear infinite;z-index:2}.ring:before,.ring:after{content:"";position:absolute;border-radius:50%}.ring:before{inset:20px;border-top:2px solid rgba(140,232,255,.94);border-bottom:2px solid rgba(215,107,255,.26);border-left:2px solid transparent;border-right:2px solid transparent;filter:drop-shadow(0 0 18px rgba(140,232,255,.56))}.ring:after{inset:72px;border-top:2px solid rgba(255,255,255,.88);border-bottom:2px solid rgba(98,134,255,.24);border-left:2px solid transparent;border-right:2px solid transparent;animation:spinR 11s linear infinite}
+    .scene-copy{position:absolute;left:28px;top:26px;z-index:3}.scene-copy small{display:block;color:var(--muted);font:500 .72rem/1 "Orbitron",sans-serif;letter-spacing:.18em;text-transform:uppercase;margin-bottom:10px}.scene-copy h2{font:700 clamp(2.3rem,4vw,3.6rem)/.92 "Orbitron",sans-serif;text-transform:uppercase;max-width:6ch}
+    .robot{position:absolute;left:50%;top:46%;width:min(78%,520px);transform:translate(-50%,-50%);overflow:visible;z-index:3;filter:drop-shadow(0 0 18px rgba(140,232,255,.24))}
+    .line{fill:none;stroke:rgba(255,255,255,.16);stroke-width:3.4;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:560;stroke-dashoffset:560;animation:draw 2.2s ease forwards}.d1{animation-delay:.18s}.d2{animation-delay:.35s}.d3{animation-delay:.52s}.d4{animation-delay:.72s}.d5{animation-delay:.92s}.joint{fill:rgba(255,255,255,.18);stroke:rgba(255,255,255,.12);stroke-width:2}.core{fill:url(#robotGlow);filter:drop-shadow(0 0 18px rgba(140,232,255,.86));animation:pulse 2.6s ease-in-out infinite}.scan{fill:none;stroke:rgba(140,232,255,.75);stroke-width:2;opacity:.55;stroke-dasharray:8 12;animation:spinR 10s linear infinite;transform-origin:256px 230px}
+    .floor{position:absolute;left:50%;bottom:86px;width:260px;height:80px;transform:translateX(-50%);border-radius:50%;background:radial-gradient(circle,rgba(140,232,255,.22),rgba(98,134,255,.1) 42%,transparent 72%);filter:blur(10px);z-index:2}
+    .status{position:absolute;left:50%;top:78%;transform:translateX(-50%);z-index:4;padding:11px 18px;border-radius:999px;border:1px solid rgba(140,232,255,.26);background:rgba(9,13,28,.7);font:500 .72rem/1 "Orbitron",sans-serif;letter-spacing:.16em;text-transform:uppercase;box-shadow:0 0 22px rgba(140,232,255,.16)}
+    .card{position:absolute;width:218px;padding:18px;border-radius:24px;border:1px solid rgba(255,255,255,.1);background:linear-gradient(180deg,rgba(22,29,58,.78),rgba(10,14,31,.7));box-shadow:0 24px 46px rgba(3,6,17,.4);opacity:.48;transform:scale(.96);transition:.28s;z-index:4}.card:before{content:"";position:absolute;left:50%;bottom:-18px;width:62px;height:1px;background:linear-gradient(90deg,transparent,rgba(140,232,255,.8),transparent);transform:translateX(-50%);opacity:.22}.card.active{opacity:1;transform:scale(1.03);border-color:rgba(140,232,255,.44);box-shadow:0 0 0 1px rgba(140,232,255,.08) inset,0 24px 52px rgba(17,77,202,.18)}.card.active:before{opacity:.95}.card small{display:block;color:var(--gold);font:500 .66rem/1 "Orbitron",sans-serif;letter-spacing:.16em;text-transform:uppercase;margin-bottom:10px}.card h3{font-size:1rem;margin-bottom:8px}.card p{color:var(--muted);font-size:.88rem;line-height:1.6}
+    .tl{top:110px;left:24px}.tr{top:90px;right:22px}.ml{top:320px;left:4px}.mr{top:314px;right:0}.bl{bottom:28px;left:28px}.br{bottom:34px;right:34px}
+    .section{margin-top:54px;padding:26px;border-radius:34px;border:1px solid rgba(255,255,255,.08);background:rgba(9,12,26,.56);box-shadow:var(--shadow)}.head{display:flex;align-items:end;justify-content:space-between;gap:20px;margin-bottom:26px}.head h2{font:700 clamp(2rem,4vw,3.5rem)/.94 "Orbitron",sans-serif;text-transform:uppercase}.head p{max-width:30rem;color:var(--muted);line-height:1.75}
+    .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}.feature{position:relative;min-height:232px;padding:24px;overflow:hidden;border-radius:26px;border:1px solid rgba(255,255,255,.08);background:linear-gradient(180deg,rgba(17,23,47,.8),rgba(9,13,28,.66))}.feature:before{content:"";position:absolute;inset:auto -25% -35% auto;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(140,232,255,.22),transparent 65%)}.feature small{display:block;margin-bottom:18px;color:var(--green);font:500 .72rem/1 "Orbitron",sans-serif;letter-spacing:.16em;text-transform:uppercase}.feature h3{margin-bottom:12px;font-size:1.28rem}.feature p{color:var(--muted);line-height:1.72;font-size:.96rem}
+    .commands,.steps{display:grid;gap:16px}.commands{grid-template-columns:repeat(4,minmax(0,1fr))}.command{padding:22px;border-radius:24px;border:1px solid rgba(255,255,255,.08);background:linear-gradient(180deg,rgba(17,23,47,.78),rgba(8,11,24,.65))}.command h3{margin-bottom:14px;color:var(--green);font:500 .82rem/1 "Orbitron",sans-serif;letter-spacing:.18em;text-transform:uppercase}.command ul{list-style:none;display:grid;gap:10px}.command li{padding-left:14px;color:var(--muted);position:relative;line-height:1.5}.command li:before{content:"";position:absolute;left:0;top:.58em;width:6px;height:6px;border-radius:50%;background:var(--cyan);box-shadow:0 0 12px rgba(140,232,255,.8)}
+    .steps{grid-template-columns:repeat(3,minmax(0,1fr))}.step{padding:24px;border-radius:28px;border:1px solid rgba(255,255,255,.08);background:linear-gradient(180deg,rgba(18,24,49,.82),rgba(9,13,28,.65))}.num{margin-bottom:14px;color:rgba(140,232,255,.92);font:700 2rem/1 "Orbitron",sans-serif}.step h4{margin-bottom:8px;font:700 1rem/1.2 "Orbitron",sans-serif;letter-spacing:.08em}.step p,.step a{color:var(--muted);line-height:1.7}.step a{color:var(--cyan);text-decoration:none}
+    .footer{display:flex;justify-content:space-between;gap:18px;align-items:center;padding:34px 4px 10px;color:var(--muted);font-size:.92rem}
+    [data-reveal]{opacity:0;transform:translateY(26px);transition:opacity .7s,transform .7s}[data-reveal].visible{opacity:1;transform:translateY(0)}
+    @keyframes drift{from{transform:translate3d(0,0,0)}to{transform:translate3d(-18px,24px,0)}}@keyframes spin{from{transform:translate(-50%,-50%) rotate(0)}to{transform:translate(-50%,-50%) rotate(360deg)}}@keyframes spinR{from{transform:rotate(360deg)}to{transform:rotate(0)}}@keyframes pulse{0%,100%{transform:scale(.94);opacity:.9}50%{transform:scale(1.06);opacity:1}}@keyframes draw{to{stroke-dashoffset:0}}@keyframes floatA{0%,100%{transform:translate3d(0,0,0)}50%{transform:translate3d(28px,22px,0)}}@keyframes floatB{0%,100%{transform:translate3d(0,0,0)}50%{transform:translate3d(-24px,18px,0)}}
+    @media (max-width:1080px){.hero{grid-template-columns:1fr}.grid,.commands,.steps{grid-template-columns:1fr 1fr}}
+    @media (max-width:980px){.topbar{border-radius:28px;padding:16px 18px}.nav{display:none}.hero{min-height:auto;padding-top:28px}.scene{min-height:860px}.head,.footer{flex-direction:column;align-items:flex-start}.tl{top:100px;left:18px}.tr{top:100px;right:18px}.ml{top:auto;bottom:200px;left:18px}.mr{top:auto;bottom:200px;right:18px}}
+    @media (max-width:640px){.shell{width:min(100% - 20px,1220px)}h1{font-size:clamp(2.7rem,15vw,4.4rem)}.lead{font-size:1rem}.stats,.grid,.commands,.steps{grid-template-columns:1fr}.scene{min-height:1080px}.scene-copy h2{max-width:none}.ring{width:22rem;height:22rem;top:35%}.robot{width:92%;top:39%}.floor{bottom:358px}.card{width:calc(100% - 34px);left:17px;right:17px}.tl{top:480px}.tr{top:640px}.ml{top:800px;bottom:auto}.mr{top:960px;bottom:auto}.bl,.br{display:none}.status{top:44%}.section{padding:20px;border-radius:28px}}
   </style>
 </head>
 <body>
-  <div class="noise"></div>
-  <div class="orb one"></div>
-  <div class="orb two"></div>
-  <div class="orb three"></div>
-
+  <div class="noise"></div><div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div>
   <main class="shell">
     <header class="topbar" data-reveal>
-      <div class="brand">
-        <div class="brand-mark"></div>
-        <span>R.O.B.E.R.T.</span>
-      </div>
-      <nav class="nav">
-        <a href="#features">Возможности</a>
-        <a href="#commands">Команды</a>
-        <a href="#setup">Как начать</a>
-      </nav>
-      <div class="version-pill">Windows 10/11 · v1.0</div>
+      <div class="brand"><div class="mark"></div><span>R.O.B.E.R.T.</span></div>
+      <nav class="nav"><a href="#features">Возможности</a><a href="#commands">Команды</a><a href="#setup">Как начать</a></nav>
+      <div class="pill">Windows 10/11 · v1.0</div>
     </header>
 
     <section class="hero">
-      <div class="hero-copy">
+      <div>
         <div class="eyebrow" data-reveal>Voice assistant for windows</div>
-        <h1 data-reveal>
-          <span class="stroke">Creative</span><br />
-          voice<br />
-          control
-        </h1>
+        <h1 data-reveal><span class="stroke">Digital</span><br>robot<br>control</h1>
         <div class="hero-sub" data-reveal>Really Outstanding Bot for Everyday Responses &amp; Tasks</div>
-        <p class="lead" data-reveal>
-          Умный голосовой помощник для управления компьютером. Говорите по-русски, а ROBERT откроет программы, ответит на вопросы, сделает системные действия и превратит обычный рабочий стол в управляемый интерфейс.
-        </p>
-        <div class="hero-actions" data-reveal>
-          <a class="button primary" href="https://github.com/NoneCipe/robert-app/releases/download/v1.0/ROBERT.exe">Скачать ROBERT.exe</a>
-          <a class="button" href="#setup">Как запустить</a>
-        </div>
-        <span class="button-note" data-reveal>Бесплатно · Windows 10/11 · Установка не требуется</span>
+        <p class="lead" data-reveal>ROBERT теперь подаётся как живой цифровой помощник: каркас робота собирается из световых линий, а по его активным контурам раскрываются функции, которыми он реально помогает на компьютере.</p>
+        <div class="actions" data-reveal><a class="btn primary" href="https://github.com/NoneCipe/robert-app/releases/download/v1.0/ROBERT.exe">Скачать ROBERT.exe</a><a class="btn" href="#setup">Как запустить</a></div>
+        <span class="note" data-reveal>Бесплатно · Windows 10/11 · Установка не требуется</span>
         <div class="stats" data-reveal>
-          <article class="stat">
-            <strong>RU</strong>
-            <span>Понимает голосовые команды на русском и заточен под естественное повседневное общение.</span>
-          </article>
-          <article class="stat">
-            <strong>AI</strong>
-            <span>Поддерживает умный диалог и отвечает через языковую модель, когда нужен не просто запуск команды.</span>
-          </article>
-          <article class="stat">
-            <strong>PC</strong>
-            <span>Управляет приложениями, звуком, окнами и системными действиями прямо с рабочего стола.</span>
-          </article>
+          <article class="stat"><strong>RU</strong><span>Понимает команды на русском и заточен под естественные фразы вместо сложных формулировок.</span></article>
+          <article class="stat"><strong>AI</strong><span>Поддерживает умный диалог и умеет не только запускать действия, но и отвечать на вопросы.</span></article>
+          <article class="stat"><strong>PC</strong><span>Управляет приложениями, окнами, системными действиями и повседневной работой за вас.</span></article>
         </div>
       </div>
 
       <div class="scene" data-reveal>
-        <canvas id="particles"></canvas>
-        <div class="hero-ring"></div>
-        <div class="core">
-          <div class="core-eye"></div>
-        </div>
-
-        <article class="glass-card card-left">
-          <span class="card-tag">Assistant core</span>
-          <div class="card-title">ROBERT</div>
-          <p class="card-copy">Голосовой помощник с sci-fi подачей: не шаблонный лендинг, а экран, который визуально ощущается как живой digital-интерфейс.</p>
-          <div class="spectrum"></div>
-        </article>
-
-        <article class="glass-card card-right">
-          <span class="card-tag">Live response</span>
-          <div class="bars">
-            <span style="height:46px"></span>
-            <span style="height:90px"></span>
-            <span style="height:66px"></span>
-            <span style="height:118px"></span>
-            <span style="height:74px"></span>
-            <span style="height:102px"></span>
-            <span style="height:58px"></span>
-          </div>
-        </article>
+        <canvas id="particles"></canvas><div class="gridfx"></div><div class="ring"></div>
+        <div class="scene-copy"><small>Live robotic interface</small><h2>What ROBERT can do</h2></div>
+        <svg class="robot" viewBox="0 0 512 680" aria-hidden="true">
+          <defs><radialGradient id="robotGlow" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#ffffff"/><stop offset="38%" stop-color="#8ce8ff"/><stop offset="76%" stop-color="#6286ff"/><stop offset="100%" stop-color="transparent"/></radialGradient></defs>
+          <circle class="scan" cx="256" cy="230" r="88"></circle>
+          <path class="line" d="M224 118 Q256 84 288 118"></path><path class="line d1" d="M210 122 Q256 154 302 122"></path><path class="line d1" d="M206 130 Q196 196 212 250 Q224 288 242 316"></path><path class="line d2" d="M306 130 Q316 196 300 250 Q288 288 270 316"></path><path class="line d2" d="M224 320 Q256 340 288 320"></path><path class="line d3" d="M214 176 Q256 198 298 176"></path><path class="line d3" d="M182 238 Q134 268 108 334 Q96 364 96 424"></path><path class="line d4" d="M330 238 Q378 268 404 334 Q416 364 416 424"></path><path class="line d4" d="M96 424 Q104 462 130 486"></path><path class="line d4" d="M416 424 Q408 462 382 486"></path><path class="line d5" d="M230 326 Q214 388 210 440 Q206 514 184 602"></path><path class="line d5" d="M282 326 Q298 388 302 440 Q306 514 328 602"></path><path class="line d5" d="M184 602 Q206 624 220 652"></path><path class="line d5" d="M328 602 Q306 624 292 652"></path><path class="line d3" d="M160 292 Q202 300 222 326"></path><path class="line d3" d="M352 292 Q310 300 290 326"></path>
+          <circle class="joint" cx="256" cy="118" r="11"></circle><circle class="joint" cx="214" cy="176" r="8"></circle><circle class="joint" cx="298" cy="176" r="8"></circle><circle class="joint" cx="224" cy="320" r="8"></circle><circle class="joint" cx="288" cy="320" r="8"></circle><circle class="joint" cx="160" cy="292" r="8"></circle><circle class="joint" cx="352" cy="292" r="8"></circle><circle class="joint" cx="96" cy="424" r="8"></circle><circle class="joint" cx="416" cy="424" r="8"></circle><circle class="joint" cx="184" cy="602" r="8"></circle><circle class="joint" cx="328" cy="602" r="8"></circle>
+          <circle class="core" cx="256" cy="230" r="18"></circle>
+        </svg>
+        <div class="floor"></div>
+        <div class="status" id="feature-status">Голосовое управление</div>
+        <article class="card tl active" data-feature-card><small>Voice</small><h3>Голосовое управление</h3><p>Слушает команды на русском и превращает речь в действие без лишних шагов.</p></article>
+        <article class="card tr" data-feature-card><small>Programs</small><h3>Запуск приложений</h3><p>Открывает браузер, проводник, блокнот, калькулятор и другие обычные программы.</p></article>
+        <article class="card ml" data-feature-card><small>AI Chat</small><h3>Ответы и диалог</h3><p>Может не только выполнять команды, но и отвечать на вопросы через ИИ-модель.</p></article>
+        <article class="card mr" data-feature-card><small>System</small><h3>Скриншоты и действия</h3><p>Делает системные команды: скриншоты, сворачивание окон, блокировка ПК и другое.</p></article>
+        <article class="card bl" data-feature-card><small>Media</small><h3>Управление звуком</h3><p>Меняет громкость, ставит паузу, переключает треки и управляет медиа.</p></article>
+        <article class="card br" data-feature-card><small>Privacy</small><h3>Ваш ключ остаётся у вас</h3><p>API-ключ хранится локально, чтобы данные и доступ к модели оставались под вашим контролем.</p></article>
       </div>
     </section>
 
     <section class="section" id="features" data-reveal>
-      <div class="section-head">
-        <h2>Core<br />abilities</h2>
-        <p>Сохранил смысл вашего текущего сайта, но подал его ближе к видео: больше атмосферы, глубины и ощущения премиального технологичного продукта.</p>
-      </div>
+      <div class="head"><h2>Core<br>abilities</h2><p>Ниже оставил понятные функциональные блоки, чтобы сайт не потерял практическую пользу, а герой-экран взял на себя вау-эффект из видео.</p></div>
       <div class="grid">
-        <article class="feature">
-          <small>01 Voice</small>
-          <h3>Голосовое управление</h3>
-          <p>Говорите на русском, а ROBERT мгновенно интерпретирует команду и превращает речь в действие на компьютере.</p>
-        </article>
-        <article class="feature">
-          <small>02 AI</small>
-          <h3>Умный ИИ-диалог</h3>
-          <p>Задавайте вопросы, просите объяснить, подсказать или помочь с задачей, когда нужен уже не просто хоткей.</p>
-        </article>
-        <article class="feature">
-          <small>03 System</small>
-          <h3>Управление ПК</h3>
-          <p>Открывает приложения, делает скриншоты, управляет окнами, звуком и полезными системными сценариями.</p>
-        </article>
-        <article class="feature">
-          <small>04 Privacy</small>
-          <h3>Ваш ключ у вас</h3>
-          <p>API-ключ остаётся на вашем устройстве, чтобы контроль над доступом и настройками был у пользователя, а не у сайта.</p>
-        </article>
+        <article class="feature"><small>01 Voice</small><h3>Голосовое управление</h3><p>Говорите на русском, а ROBERT интерпретирует команду и запускает нужное действие на компьютере.</p></article>
+        <article class="feature"><small>02 AI</small><h3>Умный ИИ-диалог</h3><p>Помогает отвечать на вопросы и подсказывать решения, когда нужен уже не просто хоткей.</p></article>
+        <article class="feature"><small>03 System</small><h3>Управление ПК</h3><p>Открывает приложения, делает скриншоты, управляет окнами, звуком и системными сценариями.</p></article>
+        <article class="feature"><small>04 Privacy</small><h3>Локальный контроль</h3><p>Ваш API-ключ не уходит на сайт и остаётся на устройстве пользователя, где ему и место.</p></article>
       </div>
     </section>
 
     <section class="section" id="commands" data-reveal>
-      <div class="section-head">
-        <h2>Voice<br />commands</h2>
-        <p>Командные группы тоже оставил, но визуально сделал их частью общей футуристичной сцены, а не отдельным техно-блоком старого типа.</p>
-      </div>
-      <div class="commands-grid">
-        <article class="command-card">
-          <h3>Программы</h3>
-          <ul>
-            <li>открой браузер</li>
-            <li>открой проводник</li>
-            <li>открой блокнот</li>
-            <li>открой калькулятор</li>
-            <li>диспетчер задач</li>
-          </ul>
-        </article>
-        <article class="command-card">
-          <h3>Звук</h3>
-          <ul>
-            <li>громче / тише</li>
-            <li>выключи звук</li>
-            <li>следующий трек</li>
-            <li>предыдущий трек</li>
-            <li>пауза</li>
-          </ul>
-        </article>
-        <article class="command-card">
-          <h3>Система</h3>
-          <ul>
-            <li>скриншот</li>
-            <li>сверни всё</li>
-            <li>заблокируй ПК</li>
-          </ul>
-        </article>
-        <article class="command-card">
-          <h3>Время</h3>
-          <ul>
-            <li>который час</li>
-            <li>какое число</li>
-            <li>день недели</li>
-          </ul>
-        </article>
+      <div class="head"><h2>Voice<br>commands</h2><p>Команды оставил отдельным блоком, чтобы пользователь сразу видел, что именно умеет помощник без долгих объяснений.</p></div>
+      <div class="commands">
+        <article class="command"><h3>Программы</h3><ul><li>открой браузер</li><li>открой проводник</li><li>открой блокнот</li><li>открой калькулятор</li><li>диспетчер задач</li></ul></article>
+        <article class="command"><h3>Звук</h3><ul><li>громче / тише</li><li>выключи звук</li><li>следующий трек</li><li>предыдущий трек</li><li>пауза</li></ul></article>
+        <article class="command"><h3>Система</h3><ul><li>скриншот</li><li>сверни всё</li><li>заблокируй ПК</li></ul></article>
+        <article class="command"><h3>Время</h3><ul><li>который час</li><li>какое число</li><li>день недели</li></ul></article>
       </div>
     </section>
 
     <section class="section" id="setup" data-reveal>
-      <div class="section-head">
-        <h2>Quick<br />start</h2>
-        <p>Логику запуска приложения не менял: вы по-прежнему ведёте пользователя от скачивания к API-ключу и первому запуску, просто в более дорогой визуальной оболочке.</p>
-      </div>
+      <div class="head"><h2>Quick<br>start</h2><p>Процесс запуска не менял: пользователь скачивает файл, получает ключ и через пару минут уже может пользоваться помощником.</p></div>
       <div class="steps">
-        <article class="step">
-          <div class="step-num">01</div>
-          <h4>Скачайте приложение</h4>
-          <p>Нажмите кнопку выше и скачайте <a href="https://github.com/NoneCipe/robert-app/releases/download/v1.0/ROBERT.exe">ROBERT.exe</a>. Установка не требуется, достаточно просто запустить файл.</p>
-        </article>
-        <article class="step">
-          <div class="step-num">02</div>
-          <h4>Получите API-ключ</h4>
-          <p>Зарегистрируйтесь на <a href="https://console.groq.com" target="_blank" rel="noreferrer">console.groq.com</a>, затем создайте API Key. Это бесплатно и нужно один раз.</p>
-        </article>
-        <article class="step">
-          <div class="step-num">03</div>
-          <h4>Вставьте ключ в настройки</h4>
-          <p>Запустите ROBERT, откройте настройки, вставьте ключ и сохраните. После этого помощник готов к работе.</p>
-        </article>
+        <article class="step"><div class="num">01</div><h4>Скачайте приложение</h4><p>Нажмите кнопку выше и скачайте <a href="https://github.com/NoneCipe/robert-app/releases/download/v1.0/ROBERT.exe">ROBERT.exe</a>. Установка не требуется.</p></article>
+        <article class="step"><div class="num">02</div><h4>Получите API-ключ</h4><p>Зарегистрируйтесь на <a href="https://console.groq.com" target="_blank" rel="noreferrer">console.groq.com</a> и создайте API Key. Это бесплатно.</p></article>
+        <article class="step"><div class="num">03</div><h4>Вставьте ключ в настройки</h4><p>Запустите ROBERT, откройте настройки, вставьте ключ и сохраните. После этого помощник готов к работе.</p></article>
       </div>
     </section>
 
-    <footer class="footer" data-reveal>
-      <span>R.O.B.E.R.T. © 2026 · Really Outstanding Bot for Everyday Responses &amp; Tasks</span>
-      <span>Standalone HTML landing page</span>
-    </footer>
+    <footer class="footer" data-reveal><span>R.O.B.E.R.T. © 2026 · Really Outstanding Bot for Everyday Responses &amp; Tasks</span><span>Standalone HTML landing page</span></footer>
   </main>
-
   <script>
-    const canvas = document.getElementById('particles');
-    const ctx = canvas.getContext('2d');
-    let particles = [];
-
-    function fitCanvas() {
-      const scene = canvas.parentElement;
-      const ratio = Math.min(window.devicePixelRatio || 1, 2);
-      canvas.width = scene.clientWidth * ratio;
-      canvas.height = scene.clientHeight * ratio;
-      canvas.style.width = scene.clientWidth + 'px';
-      canvas.style.height = scene.clientHeight + 'px';
-      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
-      seedParticles(scene.clientWidth, scene.clientHeight);
-    }
-
-    function seedParticles(width, height) {
-      const count = Math.max(90, Math.floor(width * 0.18));
-      particles = Array.from({ length: count }, () => ({
-        x: Math.random() * width,
-        y: Math.random() * height,
-        r: Math.random() * 1.9 + 0.4,
-        a: Math.random() * Math.PI * 2,
-        s: Math.random() * 0.7 + 0.15,
-        drift: Math.random() * 0.7 + 0.2,
-      }));
-    }
-
-    function draw() {
-      const width = canvas.clientWidth;
-      const height = canvas.clientHeight;
-      ctx.clearRect(0, 0, width, height);
-
-      for (const p of particles) {
-        p.a += 0.01 * p.drift;
-        p.y -= p.s;
-        p.x += Math.sin(p.a) * 0.35;
-
-        if (p.y < -8) {
-          p.y = height + 8;
-          p.x = Math.random() * width;
-        }
-
-        const glow = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 8);
-        glow.addColorStop(0, 'rgba(255,255,255,0.95)');
-        glow.addColorStop(0.35, 'rgba(137,231,255,0.45)');
-        glow.addColorStop(1, 'rgba(137,231,255,0)');
-        ctx.fillStyle = glow;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.r * 8, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      requestAnimationFrame(draw);
-    }
-
-    const observer = new IntersectionObserver((entries) => {
-      for (const entry of entries) {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('visible');
-          observer.unobserve(entry.target);
-        }
-      }
-    }, { threshold: 0.16 });
-
-    document.querySelectorAll('[data-reveal]').forEach((element) => observer.observe(element));
-
-    window.addEventListener('resize', fitCanvas);
-    fitCanvas();
-    draw();
+    const canvas=document.getElementById("particles"),ctx=canvas.getContext("2d"),cards=[...document.querySelectorAll("[data-feature-card]")],statusLabel=document.getElementById("feature-status");let particles=[],active=0;
+    function fitCanvas(){const scene=canvas.parentElement,ratio=Math.min(window.devicePixelRatio||1,2);canvas.width=scene.clientWidth*ratio;canvas.height=scene.clientHeight*ratio;canvas.style.width=scene.clientWidth+"px";canvas.style.height=scene.clientHeight+"px";ctx.setTransform(ratio,0,0,ratio,0,0);seed(scene.clientWidth,scene.clientHeight)}
+    function seed(w,h){const count=Math.max(110,Math.floor(w*.2));particles=Array.from({length:count},()=>({x:Math.random()*w,y:Math.random()*h,r:Math.random()*1.8+.4,a:Math.random()*Math.PI*2,s:Math.random()*.7+.15,d:Math.random()*.7+.2}))}
+    function draw(){const w=canvas.clientWidth,h=canvas.clientHeight;ctx.clearRect(0,0,w,h);for(const p of particles){p.a+=.01*p.d;p.y-=p.s;p.x+=Math.sin(p.a)*.35;if(p.y<-8){p.y=h+8;p.x=Math.random()*w}const g=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.r*8);g.addColorStop(0,"rgba(255,255,255,.95)");g.addColorStop(.35,"rgba(140,232,255,.45)");g.addColorStop(1,"rgba(140,232,255,0)");ctx.fillStyle=g;ctx.beginPath();ctx.arc(p.x,p.y,p.r*8,0,Math.PI*2);ctx.fill()}requestAnimationFrame(draw)}
+    function setActive(i){active=i;cards.forEach((c,n)=>c.classList.toggle("active",n===active));statusLabel.textContent=cards[active].querySelector("h3").textContent}
+    const observer=new IntersectionObserver(entries=>{for(const e of entries)if(e.isIntersecting){e.target.classList.add("visible");observer.unobserve(e.target)}},{threshold:.16});document.querySelectorAll("[data-reveal]").forEach(el=>observer.observe(el));
+    window.addEventListener("resize",fitCanvas);fitCanvas();draw();setActive(0);setInterval(()=>setActive((active+1)%cards.length),1900);
   </script>
 </body>
 </html>
